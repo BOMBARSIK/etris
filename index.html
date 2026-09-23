@@ -174,7 +174,7 @@
         fetch('book.json')
             .then(response => response.json())
             .then(data => {
-                bookData = data.chapters;
+                bookData = data.book.chapters;
                 renderChapterList();
                 showChapter(0);
             })
