@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Коробка с мусором</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a24;
+            --panel-bg: #252533;
+            --text-main: #e2e2eb;
+            --text-muted: #a0a0b5;
+            --accent: #8b78a5;
+            --accent-hover: #a390bd;
+            --radius: 24px;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Nunito', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1200px;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* Боковое меню */
+        .sidebar {
+            width: 300px;
+            background-color: var(--panel-bg);
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 90px);
+            position: sticky;
+            top: 20px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 15px;
+            border: none;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-main);
+            font-family: 'Nunito', sans-serif;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .search-box:focus {
+            background: rgba(255,255,255,0.1);
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        .chapter-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        /* Кастомизация скроллбара */
+        .chapter-list::-webkit-scrollbar { width: 6px; }
+        .chapter-list::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+        .chapter-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            color: var(--text-muted);
+        }
+
+        .chapter-item:hover {
+            background: rgba(255,255,255,0.03);
+            color: var(--text-main);
+        }
+
+        .chapter-item.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* Область чтения */
+        .reader {
+            flex-grow: 1;
+            background-color: var(--panel-bg);
+            border-radius: var(--radius);
+            padding: 50px 60px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow-y: auto;
+            min-height: calc(100vh - 140px);
+        }
+
+        .chapter-title {
+            font-size: 2rem;
+            margin-top: 0;
+            margin-bottom: 30px;
+            color: var(--text-main);
+        }
+
+        .text-content {
+            font-family: 'Lora', serif;
+            font-size: 1.15rem;
+            line-height: 1.9;
+            color: #cdd;
+            white-space: pre-wrap; /* Сохраняет абзацы из JSON */
+        }
+
+        /* Подсветка поиска */
+        mark {
+            background-color: rgba(233, 69, 96, 0.4);
+            color: #fff;
+            border-radius: 3px;
+            padding: 0 2px;
+        }
+
+        .search-results {
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">ЭТРИС</div>
+            <input type="text" id="searchInput" class="search-box" placeholder="Поиск по книге...">
+            <div id="searchResultsCount" class="search-results">Найдено совпадений: 0</div>
+            <ul class="chapter-list" id="chapterList">
+                <!-- Главы будут загружаться сюда -->
+            </ul>
+        </aside>
+
+        <main class="reader" id="readerContent">
+            <h1 class="chapter-title" id="currentTitle">Загрузка...</h1>
+            <div class="text-content" id="currentText">Пожалуйста, подождите. Книга загружается.</div>
+        </main>
+    </div>
+
+    <script>
+        let bookData = [];
+        let currentChapterIndex = 0;
+
+        // Загрузка книги из файла book.json
+        fetch('book.json')
+            .then(response => response.json())
+            .then(data => {
+                bookData = data.chapters;
+                renderChapterList();
+                showChapter(0);
+            })
+            .catch(error => {
+                document.getElementById('currentTitle').innerText = "Ошибка загрузки";
+                document.getElementById('currentText').innerText = "Не удалось загрузить файл book.json. Убедитесь, что он создан в репозитории.";
+                console.error("Ошибка:", error);
+            });
+
+        // Отрисовка списка глав
+        function renderChapterList() {
+            const list = document.getElementById('chapterList');
+            list.innerHTML = '';
+            bookData.forEach((chapter, index) => {
+                const li = document.createElement('li');
+                li.className = `chapter-item ${index === currentChapterIndex ? 'active' : ''}`;
+                li.innerText = chapter.title;
+                li.onclick = () => showChapter(index);
+                list.appendChild(li);
+            });
+        }
+
+        // Показ выбранной главы
+        function showChapter(index) {
+            currentChapterIndex = index;
+            document.getElementById('currentTitle').innerText = bookData[index].title;
+            document.getElementById('currentText').innerHTML = bookData[index].content;
+            renderChapterList();
+            window.scrollTo(0, 0);
+        }
+
+        // Логика поиска
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const resultsCount = document.getElementById('searchResultsCount');
+            
+            if (query.length < 3) {
+                showChapter(currentChapterIndex); // Сброс при пустом поиске
+                resultsCount.style.display = 'none';
+                return;
+            }
+
+            // Ищем по текущей главе (можно расширить на всю книгу)
+            let text = bookData[currentChapterIndex].content;
+            let regex = new RegExp(`(${query})`, 'gi');
+            let matches = text.match(regex);
+            
+            if (matches) {
+                let highlightedText = text.replace(regex, '<mark>$1</mark>');
+                document.getElementById('currentText').innerHTML = highlightedText;
+                resultsCount.innerText = `В этой главе найдено: ${matches.length}`;
+                resultsCount.style.display = 'block';
+            } else {
+                document.getElementById('currentText').innerHTML = text;
+                resultsCount.innerText = `В этой главе совпадений нет`;
+                resultsCount.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
