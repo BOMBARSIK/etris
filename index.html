@@ -3,25 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Коробка с мусором</title>
+    <title>Этрис</title>
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #1a1a24;
-            --panel-bg: #252533;
+            --bg-color: #16161f;
+            --panel-bg: #21212e;
             --text-main: #e2e2eb;
-            --text-muted: #a0a0b5;
-            --accent: #8b78a5;
-            --accent-hover: #a390bd;
-            --radius: 24px;
+            --text-muted: #8b8b9e;
+            --accent: #9d88b8;
+            --accent-hover: #b59fce;
+            --accent-active: #816a9c;
+            --radius: 20px;
         }
+
+        /* Кастомизация глобального скроллбара */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--panel-bg); border-radius: 10px; border: 1px solid var(--bg-color); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
             font-family: 'Nunito', sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 2vh 2vw;
             display: flex;
             justify-content: center;
             line-height: 1.6;
@@ -29,51 +36,57 @@
 
         .container {
             display: flex;
-            max-width: 1200px;
+            max-width: 1400px; /* Увеличили общую ширину, чтобы всё влезло */
             width: 100%;
-            gap: 20px;
+            gap: 25px; /* Больше "воздуха" между колонками */
         }
 
         /* Боковое меню */
         .sidebar {
-            width: 300px;
+            width: 380px; /* Сделали левый блок шире (было 300) */
+            flex-shrink: 0; /* ЗАПРЕЩАЕМ меню сужаться при нехватке места */
             background-color: var(--panel-bg);
             border-radius: var(--radius);
             padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 90px);
+            height: calc(100vh - 4vh - 50px);
             position: sticky;
-            top: 20px;
+            top: 2vh;
         }
 
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: 700;
             color: var(--accent);
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             text-align: center;
+            letter-spacing: 2px;
         }
 
         .search-box {
             width: 100%;
-            padding: 12px 15px;
-            border-radius: 15px;
-            border: none;
-            background: rgba(255,255,255,0.05);
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            background: rgba(255,255,255,0.04);
             color: var(--text-main);
             font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
             margin-bottom: 20px;
             box-sizing: border-box;
             outline: none;
-            transition: 0.3s;
+            transition: all 0.3s ease;
         }
 
         .search-box:focus {
-            background: rgba(255,255,255,0.1);
-            box-shadow: 0 0 0 2px var(--accent);
+            background: rgba(255,255,255,0.07);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(157, 136, 184, 0.15);
         }
+
+        .search-box::placeholder { color: var(--text-muted); }
 
         .chapter-list {
             list-style: none;
@@ -81,70 +94,87 @@
             margin: 0;
             overflow-y: auto;
             flex-grow: 1;
+            padding-right: 10px;
         }
 
-        /* Кастомизация скроллбара */
-        .chapter-list::-webkit-scrollbar { width: 6px; }
-        .chapter-list::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
-
         .chapter-item {
-            padding: 12px 15px;
+            padding: 14px 18px;
             margin-bottom: 8px;
             border-radius: 12px;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.25s ease;
             color: var(--text-muted);
+            font-weight: 600;
+            border-left: 3px solid transparent;
         }
 
         .chapter-item:hover {
-            background: rgba(255,255,255,0.03);
+            background: rgba(255,255,255,0.04);
             color: var(--text-main);
+            transform: translateX(4px); /* Приятный сдвиг при наведении */
         }
 
         .chapter-item.active {
-            background: var(--accent);
-            color: #fff;
+            background: rgba(157, 136, 184, 0.1);
+            color: var(--accent-hover);
+            border-left: 4px solid var(--accent); /* Полоска слева у активной главы */
         }
 
         /* Область чтения */
         .reader {
             flex-grow: 1;
+            min-width: 0; /* КРИТИЧЕСКИ ВАЖНО: не дает контенту разрывать ширину блоков */
             background-color: var(--panel-bg);
             border-radius: var(--radius);
-            padding: 50px 60px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 50px 70px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             overflow-y: auto;
-            min-height: calc(100vh - 140px);
+            min-height: calc(100vh - 4vh - 100px);
+            position: relative;
         }
 
         .chapter-title {
-            font-size: 2rem;
+            font-size: 2.2rem;
             margin-top: 0;
-            margin-bottom: 30px;
-            color: var(--text-main);
+            margin-bottom: 35px;
+            color: #fff;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
         .text-content {
             font-family: 'Lora', serif;
             font-size: 1.15rem;
             line-height: 1.9;
-            color: #cdd;
-            white-space: pre-wrap; /* Сохраняет абзацы из JSON */
+            color: #d1d1e0;
+            white-space: pre-wrap;
+            word-wrap: break-word; /* ЗАЩИТА: переносит длинные слова */
+            overflow-wrap: break-word; /* ЗАЩИТА: переносит длинные слова */
+            transition: opacity 0.4s ease; /* Плавное появление текста */
+            opacity: 1;
         }
+
+        /* Класс для анимации смены текста */
+        .fade-out { opacity: 0; }
 
         /* Подсветка поиска */
         mark {
-            background-color: rgba(233, 69, 96, 0.4);
+            background-color: rgba(157, 136, 184, 0.4);
             color: #fff;
-            border-radius: 3px;
-            padding: 0 2px;
+            border-radius: 4px;
+            padding: 2px 4px;
+            box-shadow: 0 0 5px rgba(157, 136, 184, 0.2);
         }
 
         .search-results {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--accent);
             margin-bottom: 15px;
             display: none;
+            background: rgba(157, 136, 184, 0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-align: center;
         }
     </style>
 </head>
@@ -170,11 +200,21 @@
         let bookData = [];
         let currentChapterIndex = 0;
 
-        // Загрузка книги из файла book.json
+        // Функция для очистки текста от[cite: 1] и подобных меток
+        function cleanText(text) {
+            if (!text) return text;
+            // Регулярное выражение удаляет всё, что выглядит как
+            return text.replace(/\/g, '').trim();
+        }
+
         fetch('book.json')
             .then(response => response.json())
             .then(data => {
-                bookData = data.book.chapters;
+                // Загружаем главы и сразу очищаем их названия и текст от мусора
+                bookData = data.book.chapters.map(chapter => ({
+                    title: cleanText(chapter.title),
+                    content: cleanText(chapter.content)
+                }));
                 renderChapterList();
                 showChapter(0);
             })
@@ -184,7 +224,6 @@
                 console.error("Ошибка:", error);
             });
 
-        // Отрисовка списка глав
         function renderChapterList() {
             const list = document.getElementById('chapterList');
             list.innerHTML = '';
@@ -197,38 +236,55 @@
             });
         }
 
-        // Показ выбранной главы
         function showChapter(index) {
+            if(index === currentChapterIndex && bookData.length > 0) return; // Не перезагружать ту же главу
+            
+            const titleEl = document.getElementById('currentTitle');
+            const textEl = document.getElementById('currentText');
+            
             currentChapterIndex = index;
-            document.getElementById('currentTitle').innerText = bookData[index].title;
-            document.getElementById('currentText').innerHTML = bookData[index].content;
-            renderChapterList();
-            window.scrollTo(0, 0);
+
+            // Красивая плавная смена текста
+            textEl.classList.add('fade-out');
+            titleEl.classList.add('fade-out');
+            
+            setTimeout(() => {
+                titleEl.innerText = bookData[index].title;
+                textEl.innerHTML = bookData[index].content;
+                
+                textEl.classList.remove('fade-out');
+                titleEl.classList.remove('fade-out');
+                renderChapterList();
+                window.scrollTo(0, 0); // Прокрутка всей страницы наверх
+                document.querySelector('.reader').scrollTo(0, 0); // Прокрутка внутри блока наверх
+            }, 150); // Ждем пока текст станет прозрачным, меняем и показываем
         }
 
         // Логика поиска
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const query = e.target.value.toLowerCase();
             const resultsCount = document.getElementById('searchResultsCount');
+            const textEl = document.getElementById('currentText');
             
             if (query.length < 3) {
-                showChapter(currentChapterIndex); // Сброс при пустом поиске
+                textEl.innerHTML = bookData[currentChapterIndex].content; // Возвращаем чистый текст
                 resultsCount.style.display = 'none';
                 return;
             }
 
-            // Ищем по текущей главе (можно расширить на всю книгу)
             let text = bookData[currentChapterIndex].content;
+            // Ищем совпадения (игнорируя регистр)
             let regex = new RegExp(`(${query})`, 'gi');
             let matches = text.match(regex);
             
             if (matches) {
+                // Подсвечиваем найденное
                 let highlightedText = text.replace(regex, '<mark>$1</mark>');
-                document.getElementById('currentText').innerHTML = highlightedText;
+                textEl.innerHTML = highlightedText;
                 resultsCount.innerText = `В этой главе найдено: ${matches.length}`;
                 resultsCount.style.display = 'block';
             } else {
-                document.getElementById('currentText').innerHTML = text;
+                textEl.innerHTML = text;
                 resultsCount.innerText = `В этой главе совпадений нет`;
                 resultsCount.style.display = 'block';
             }
